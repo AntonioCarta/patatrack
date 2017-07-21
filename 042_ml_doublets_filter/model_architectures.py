@@ -9,6 +9,50 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 from keras.utils import plot_model
 
 
+def big_filters_model(args, n_channels):
+    hit_shapes = Input(shape=(8, 8, n_channels), name='hit_shape_input')
+    infos = Input(shape=(len(dataset.featurelabs),), name='info_input')
+
+    conv = Conv2D(128, (8, 8), activation='relu', padding='valid', data_format="channels_last", name='conv1')(hit_shapes)
+
+    flat = Flatten()(conv)
+    concat = concatenate([flat, infos])
+
+    drop = Dropout(args.dropout)(concat)
+    dense = Dense(256, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense1')(drop)
+    drop = Dropout(args.dropout)(dense)
+    dense = Dense(64, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense2')(drop)
+    drop = Dropout(args.dropout)(dense)
+    pred = Dense(2, activation='softmax', kernel_constraint=max_norm(args.maxnorm), name='output')(drop)
+
+    model = Model(inputs=[hit_shapes, infos], outputs=pred)
+    my_sgd = optimizers.SGD(lr=args.lr, decay=1e-5, momentum=args.momentum, nesterov=True)
+    model.compile(optimizer=my_sgd, loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
+
+
+
+def dense_model(args, n_channels):
+    hit_shapes = Input(shape=(8, 8, n_channels), name='hit_shape_input')
+    infos = Input(shape=(len(dataset.featurelabs),), name='info_input')
+    flat = Flatten()(hit_shapes)    
+    concat = concatenate([flat, infos])
+
+    b_norm = BatchNormalization()(concat)
+    dense = Dense(256, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense1')(b_norm)
+    drop = Dropout(args.dropout)(dense)
+    dense = Dense(128, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense2')(b_norm)
+    drop = Dropout(args.dropout)(dense)
+    dense = Dense(64, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense3')(drop)
+    drop = Dropout(args.dropout)(dense)
+    pred = Dense(2, activation='softmax', kernel_constraint=max_norm(args.maxnorm), name='output')(drop)
+
+    model = Model(inputs=[hit_shapes, infos], outputs=pred)
+    my_sgd = optimizers.SGD(lr=args.lr, decay=1e-4, momentum=args.momentum, nesterov=True)
+    model.compile(optimizer=my_sgd, loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
+
+
 def small_doublet_model(args, n_channels):
     hit_shapes = Input(shape=(8, 8, n_channels), name='hit_shape_input')
     infos = Input(shape=(len(dataset.featurelabs),), name='info_input')
@@ -34,7 +78,7 @@ def small_doublet_model(args, n_channels):
     pred = Dense(2, activation='softmax', kernel_constraint=max_norm(args.maxnorm), name='output')(drop)
 
     model = Model(inputs=[hit_shapes, infos], outputs=pred)
-    my_sgd = optimizers.SGD(lr=args.lr, decay=1e-5, momentum=args.momentum, nesterov=True)
+    my_sgd = optimizers.SGD(lr=args.lr, decay=1e-4, momentum=args.momentum, nesterov=True)
     model.compile(optimizer=my_sgd, loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
@@ -64,7 +108,7 @@ def big_doublet_model(args, n_channels):
     pred = Dense(2, activation='softmax', kernel_constraint=max_norm(args.maxnorm), name='output')(drop)
 
     model = Model(inputs=[hit_shapes, infos], outputs=pred)
-    my_sgd = optimizers.SGD(lr=args.lr, decay=1e-5, momentum=args.momentum, nesterov=True)
+    my_sgd = optimizers.SGD(lr=args.lr, decay=1e-4, momentum=args.momentum, nesterov=True)
     model.compile(optimizer=my_sgd, loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
@@ -106,7 +150,7 @@ def separate_conv_doublet_model(args, n_channels):
     pred = Dense(2, activation='softmax', kernel_constraint=max_norm(args.maxnorm), name='output')(drop)
 
     model = Model(inputs=[in_hit_shapes, out_hit_shapes, infos], outputs=pred)
-    my_sgd = optimizers.SGD(lr=args.lr, decay=1e-6, momentum=args.momentum, nesterov=True)
+    my_sgd = optimizers.SGD(lr=args.lr, decay=1e-4, momentum=args.momentum, nesterov=True)
     model.compile(optimizer=my_sgd, loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
