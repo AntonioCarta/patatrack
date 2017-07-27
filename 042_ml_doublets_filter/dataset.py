@@ -131,8 +131,8 @@ class Dataset:
         else:
             l = [a_in, a_out]        
         if angular_correction:
-            theta_in, theta_out = self.theta_correction(a_in, a_out)
-            l = l + [phi_in, phi_out, theta_in, theta_out]        
+            thetac_in, thetac_out, thetas_in, thetas_out = self.theta_correction(a_in, a_out)
+            l = l + [thetac_in, thetac_out, thetas_in, thetas_out]        
 
         data = np.array(l) # (channels, batch_size, hit_size)
         data = data.reshape((len(data), -1, 8, 8))
@@ -156,9 +156,8 @@ class Dataset:
         a_out = a_out / std
         
         l = [] 
-        phi_in, phi_out = self.phi_correction(a_in, a_out)
-        theta_in, theta_out = self.theta_correction(a_in, a_out)
-        l = l + [phi_in, phi_out, theta_in, theta_out]        
+        thetac_in, thetac_out, thetas_in, thetas_out = self.theta_correction(a_in, a_out)
+        l = l + [thetac_in, thetac_out, thetas_in, thetas_out]        
 
         for hits, ids in [(a_in, self.data.detSeqIn), (a_out, self.data.detSeqOut)]:
             for id_layer in ids.unique():
