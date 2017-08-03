@@ -26,7 +26,7 @@ if DEBUG:
 t_now = '{0:%Y-%m-%d_%H-%M-%S}'.format(datetime.datetime.now())
 # Model configuration
 parser = argparse.ArgumentParser()
-parser.add_argument('--n_epochs', type=int, default=500 if not DEBUG else 3,
+parser.add_argument('--n_epochs', type=int, default=300 if not DEBUG else 3,
                     help='number of epochs')
 parser.add_argument('--batch_size', type=int, default=128)
 parser.add_argument('--dropout', type=float, default=0.5)
@@ -65,11 +65,11 @@ val_data = Dataset(val_files)
 test_data = Dataset(test_files)
 
 train_data = train_data.filter('isFlippedIn', 1.0).filter('isFlippedOut', 1.0) \
-    .filter('detSeqIn', 0.0).filter('detSeqOut', 1.0).balance_data()
+    .filter('isBarrelIn', 1.0).filter('isBarrelOut', 1.0).balance_data()
 val_data = val_data.filter('isFlippedIn', 1.0).filter('isFlippedOut', 1.0) \
-    .filter('detSeqIn', 0.0).filter('detSeqOut', 1.0).balance_data()
+    .filter('isBarrelIn', 1.0).filter('isBarrelOut', 1.0).balance_data()
 test_data = test_data.filter('isFlippedIn', 1.0).filter('isFlippedOut', 1.0) \
-    .filter('detSeqIn', 0.0).filter('detSeqOut', 1.0)
+    .filter('isBarrelIn', 1.0).filter('isBarrelOut', 1.0)
 
 X_hit, X_info, y = train_data.get_data()
 X_val_hit, X_val_info, y_val = val_data.get_data()
@@ -83,7 +83,7 @@ train_input_list = [X_hit, X_info]  # [X_hit[:,:,:,:4], X_hit[:,:,:,4:], X_info]
 val_input_list = [X_val_hit, X_val_info]  # [X_val_hit[:,:,:,:4], X_val_hit[:,:,:,4:], X_val_info]
 test_input_list = [X_test_hit, X_test_info]  # [X_test_hit[:,:,:,:4], X_test_hit[:,:,:,4:], X_test_info]
 
-model = small_doublet_model(args, train_input_list[0].shape[-1])
+model = adam_small_doublet_model(args, train_input_list[0].shape[-1])
 
 if args.verbose:
     model.summary()
@@ -92,7 +92,7 @@ print('Training')
 # Save the best model during validation and bail out of training early if we're not improving
 _, tmpfn = tempfile.mkstemp()
 callbacks = [
-    EarlyStopping(monitor='val_loss', patience=args.patience),
+    # EarlyStopping(monitor='val_loss', patience=args.patience),
     ModelCheckpoint(tmpfn, save_best_only=True, save_weights_only=True),
     TensorBoard(log_dir=log_dir_tf, histogram_freq=0, write_graph=True, write_images=True)
 ]
