@@ -10,6 +10,36 @@ from keras.utils import plot_model
 
 IMAGE_SIZE = 15
 
+
+def adam_small_doublet_model(args, n_channels):
+    hit_shapes = Input(shape=(IMAGE_SIZE, IMAGE_SIZE, n_channels), name='hit_shape_input')
+    infos = Input(shape=(len(dataset.featurelabs),), name='info_input')
+
+    drop = Dropout(args.dropout)(hit_shapes)
+    conv = Conv2D(32, (5, 5), activation='relu', padding='same', data_format="channels_last", name='conv1')(drop)
+    conv = Conv2D(32, (3, 3), activation='relu', padding='same', data_format="channels_last", name='conv2')(conv)
+    pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_last", name='pool1')(conv)
+
+    conv = Conv2D(64, (3, 3), activation='relu', padding='same', data_format="channels_last", name='conv3')(pool)
+    conv = Conv2D(64, (3, 3), activation='relu', padding='same', data_format="channels_last", name='conv4')(conv)
+    pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_last", name='pool2')(conv)
+
+
+    flat = Flatten()(pool)
+    concat = concatenate([flat, infos])
+
+    b_norm = BatchNormalization()(concat)
+    dense = Dense(128, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense1')(b_norm)
+    drop = Dropout(args.dropout)(dense)
+    dense = Dense(64, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense2')(drop)
+    drop = Dropout(args.dropout)(dense)
+    pred = Dense(2, activation='softmax', kernel_constraint=max_norm(args.maxnorm), name='output')(drop)
+
+    model = Model(inputs=[hit_shapes, infos], outputs=pred)
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
+
+
 def big_filters_model(args, n_channels):
     hit_shapes = Input(shape=(IMAGE_SIZE, IMAGE_SIZE, n_channels), name='hit_shape_input')
     infos = Input(shape=(len(dataset.featurelabs),), name='info_input')
