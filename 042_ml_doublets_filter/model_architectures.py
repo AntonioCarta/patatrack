@@ -1,11 +1,9 @@
 import argparse
 import dataset
-from keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, concatenate, Reshape, Dropout, BatchNormalization
+from keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, concatenate, Dropout, BatchNormalization
 from keras.models import Model
-from keras.utils.np_utils import to_categorical
 from keras import optimizers
 from keras.constraints import max_norm
-from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 from keras.utils import plot_model
 
 IMAGE_SIZE = 15
@@ -23,7 +21,6 @@ def adam_small_doublet_model(args, n_channels):
     conv = Conv2D(64, (3, 3), activation='relu', padding='same', data_format="channels_last", name='conv3')(pool)
     conv = Conv2D(64, (3, 3), activation='relu', padding='same', data_format="channels_last", name='conv4')(conv)
     pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_last", name='pool2')(conv)
-
 
     flat = Flatten()(pool)
     concat = concatenate([flat, infos])
@@ -62,11 +59,10 @@ def big_filters_model(args, n_channels):
     return model
 
 
-
 def dense_model(args, n_channels):
     hit_shapes = Input(shape=(IMAGE_SIZE, IMAGE_SIZE, n_channels), name='hit_shape_input')
     infos = Input(shape=(len(dataset.featurelabs),), name='info_input')
-    flat = Flatten()(hit_shapes)    
+    flat = Flatten()(hit_shapes)
     concat = concatenate([flat, infos])
 
     b_norm = BatchNormalization()(concat)
@@ -97,7 +93,6 @@ def small_doublet_model(args, n_channels):
     conv = Conv2D(64, (3, 3), activation='relu', padding='same', data_format="channels_last", name='conv4')(conv)
     pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_last", name='pool2')(conv)
 
-
     flat = Flatten()(pool)
     concat = concatenate([flat, infos])
 
@@ -127,7 +122,6 @@ def big_doublet_model(args, n_channels):
     conv = Conv2D(256, (3, 3), activation='relu', padding='same', data_format="channels_last", name='conv4')(conv)
     pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_last", name='pool2')(conv)
 
-
     flat = Flatten()(pool)
     concat = concatenate([flat, infos])
 
@@ -154,7 +148,7 @@ def separate_conv_doublet_model(args, n_channels):
     conv = Conv2D(64, (5, 5), activation='relu', padding='same', data_format="channels_last", name='in_conv1')(drop)
     conv = Conv2D(64, (3, 3), activation='relu', padding='same', data_format="channels_last", name='in_conv2')(conv)
     pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_last", name='in_pool1')(conv)
-    
+
     conv = Conv2D(128, (3, 3), activation='relu', padding='same', data_format="channels_last", name='in_conv3')(pool)
     conv = Conv2D(128, (3, 3), activation='relu', padding='same', data_format="channels_last", name='in_conv4')(conv)
     pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_last", name='in_pool2')(conv)
@@ -165,7 +159,7 @@ def separate_conv_doublet_model(args, n_channels):
     conv = Conv2D(64, (5, 5), activation='relu', padding='same', data_format="channels_last", name='out_conv1')(drop)
     conv = Conv2D(64, (3, 3), activation='relu', padding='same', data_format="channels_last", name='out_conv2')(conv)
     pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_last", name='out_pool1')(conv)
-    
+
     conv = Conv2D(128, (3, 3), activation='relu', padding='same', data_format="channels_last", name='out_conv3')(pool)
     conv = Conv2D(128, (3, 3), activation='relu', padding='same', data_format="channels_last", name='out_conv4')(conv)
     pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_last", name='out_pool2')(conv)
@@ -186,7 +180,7 @@ def separate_conv_doublet_model(args, n_channels):
     return model
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--n_epochs', type=int, default=100)
     parser.add_argument('--batch_size', type=int, default=128)
@@ -202,8 +196,3 @@ if __name__=='__main__':
 
     plot_model(big_doublet_model(args, 8), to_file='big_model.png', show_shapes=True, show_layer_names=True)
     plot_model(separate_conv_doublet_model(args, 4), to_file='separate_conv_model.png', show_shapes=True, show_layer_names=True)
-
-
-
-
-
