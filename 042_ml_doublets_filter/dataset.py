@@ -1,16 +1,17 @@
 # flake8: noqa: E402, F401
 import socket
-import numpy as np
-import pandas as pd
-
 if socket.gethostname() == 'cmg-gpu1080':
     print('locking only one GPU.')
     import setGPU
 
+import numpy as np
+import pandas as pd
 from keras.utils.np_utils import to_categorical
 
 
 target_lab = "pdgId"
+
+layer_ids = [0, 1, 2, 3, 14, 15, 16, 29, 30, 31]
 
 headLab = ["run", "evt", "detSeqIn", "detSeqOut", "inX", "inY", "inZ", "outX", "outY", "outZ",
            "inPhi", "inR", "outPhi", "outR",
@@ -70,6 +71,12 @@ class Dataset:
             df = pd.read_hdf(f, mode='r')
             df.columns = dataLab  # change wrong columns names
             self.data = self.data.append(df)
+
+    def from_dataframe(data):
+        """ Constructor method to initialize the classe from a DataFrame """
+        d = Dataset([])  # really ugly hack. Should add a constructor with Dataframe
+        d.data = data
+        return d
 
     def theta_correction(self, hits_in, hits_out):
         # theta correction
@@ -141,9 +148,9 @@ class Dataset:
         """ Returns info features as numpy array. """
         return self.data[featurelabs].as_matrix()
 
-    def get_barrel_data(self):
-        a_in = self.data[inhitlabs].as_matrix()
-        a_out = self.data[outhitlabs].as_matrix()
+    def get_layer_map_data(self):
+        a_in = self.data[inhitlabs].as_matrix().astype(np.float16)
+        a_out = self.data[outhitlabs].as_matrix().astype(np.float16)
 
         # mean, std precomputed for data NOPU
         mean, std = (668.25684, 3919.5576)
@@ -156,7 +163,7 @@ class Dataset:
         l = l + [thetac_in, thetac_out, thetas_in, thetas_out]
 
         for hits, ids in [(a_in, self.data.detSeqIn), (a_out, self.data.detSeqOut)]:
-            for id_layer in ids.unique():
+            for id_layer in layer_ids:
                 layer_hits = np.zeros(hits.shape)
                 bool_mask = ids == id_layer
                 layer_hits[bool_mask, :] = hits[bool_mask, :]
@@ -177,7 +184,7 @@ class Dataset:
         X_hit = self.get_hit_shapes(
             normalize, angular_correction, flipped_channels)
         X_info = self.get_info_features()
-        y = to_categorical(self.get_labels())
+        y = to_categorical(self.get_labels(), num_classes=2)
         return X_hit, X_info, y
 
     def save(self, fname):
