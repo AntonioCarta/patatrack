@@ -64,7 +64,7 @@ infoLab = XYZ + targetlabes
 class Dataset:
     """ Load the dataset from txt files. """
 
-    def __init__(self, fnames, delimit='\t', max_rows=None):
+    def __init__(self, fnames):
         self.data = pd.DataFrame(data=[], columns=dataLab)
         for f in fnames:
             print("Loading: " + f)
@@ -74,7 +74,7 @@ class Dataset:
 
     def from_dataframe(data):
         """ Constructor method to initialize the classe from a DataFrame """
-        d = Dataset([])  # really ugly hack. Should add a constructor with Dataframe
+        d = Dataset([])
         d.data = data
         return d
 
@@ -148,7 +148,7 @@ class Dataset:
         """ Returns info features as numpy array. """
         return self.data[featurelabs].as_matrix()
 
-    def get_layer_map_data(self):
+    def get_layer_map_data(self, crop=False):
         a_in = self.data[inhitlabs].as_matrix().astype(np.float16)
         a_out = self.data[outhitlabs].as_matrix().astype(np.float16)
 
@@ -173,6 +173,8 @@ class Dataset:
         data = data.reshape((len(data), -1, 15, 15))
         X_hit = np.transpose(data, (1, 2, 3, 0))
 
+        if crop:
+            X_hit = X_hit[:, 4:11, 4:11, :]
         X_info = self.get_info_features()
         y = to_categorical(self.get_labels())
         return X_hit, X_info, y
@@ -180,9 +182,11 @@ class Dataset:
     def get_labels(self):
         return self.data[target_lab].as_matrix() != -1.0
 
-    def get_data(self, normalize=True, angular_correction=True, flipped_channels=True):
+    def get_data(self, normalize=True, angular_correction=True, flipped_channels=True, crop=False):
         X_hit = self.get_hit_shapes(
             normalize, angular_correction, flipped_channels)
+        if crop:
+            X_hit = X_hit[:, 4:11, 4:11, :]
         X_info = self.get_info_features()
         y = to_categorical(self.get_labels(), num_classes=2)
         return X_hit, X_info, y

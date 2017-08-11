@@ -10,11 +10,11 @@ for f in os.listdir(remote_data):
         continue
     try:
         ext = f.split('.')[-1]
-        if (ext == 'h5'):
+        if ext == 'h5':
             print("Loading: " + f)
             train_data = Dataset([remote_data + f]).balance_data()
             train_data.save(new_dir + f)
-        elif (ext == 'gz'):
+        elif ext == 'gz':
             print("Loading: " + f)
             with open(remote_data + f, 'rb') as f_zip:
                 fc = f_zip.read()
