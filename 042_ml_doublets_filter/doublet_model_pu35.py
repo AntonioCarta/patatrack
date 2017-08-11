@@ -51,7 +51,7 @@ parser.add_argument('--maxnorm', type=float, default=10.)
 parser.add_argument('--verbose', type=int, default=1)
 args = parser.parse_args()
 
-if args.name == None:
+if args.name is None:
     args.name = input('model name: ')
 
 log_dir_tf = args.log_dir + '/' + args.name

@@ -16,20 +16,20 @@ testfiles = allfiles[:40]
 
 
 COMPRESSED = False
-dir = "data/TTBar_35_PU"
+data_dir = "data/TTBar_35_PU"
 
 def create_numpy_data(files):
     all_data = []
     for fname in files:
         print("processsing: " + fname)
         #with gzip.open(dir + "/" + fname, 'rb') as f:
-        data = np.genfromtxt(dir + "/" + fname, delimiter='\t', dtype=np.float32)
+        data = np.genfromtxt(data_dir + "/" + fname, delimiter='\t', dtype=np.float32)
         all_data.append(data)
     data = np.vstack(all_data)
     return data
 
 
-fnames = os.listdir(dir)
+fnames = os.listdir(data_dir)
 n_files = len(fnames)
 i_train = int(n_files * 0.5)
 i_val = int(n_files * 0.75)

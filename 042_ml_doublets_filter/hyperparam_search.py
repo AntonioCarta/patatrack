@@ -20,7 +20,7 @@ for drop in drop_values:
         wd_opt = '--dropout=' + str(drop)
         lr_opt = '--lr=' + str(lr)
         name_opt = '--name=' + 'doublet_cnn_v1_drop' + str(drop) + '_lr' + str(lr) + '_v' + str(random.randint(0, 10**3))
-        command = 'python doublet_model.py ' + wd_opt + ' ' + lr_opt + ' ' +  name_opt + ' ' + log_dir_opt
+        command = 'python doublet_model.py ' + wd_opt + ' ' + lr_opt + ' ' + name_opt + ' ' + log_dir_opt
         p = subprocess.Popen(command, shell=True)
 
         ps.append(p)

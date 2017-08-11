@@ -20,10 +20,12 @@ parser.add_argument('--pred_folder', type=str, default='data/pred/')
 parser.add_argument('--target_folder', type=str, default='data/target/')
 args = parser.parse_args()
 
-if args.model_name == None:
-    args.model_name == input()
+if args.model_name is None:
+    args.model_name = input()
 
-def streaming_prediction(model, files, output_folder, filters=[]):
+def streaming_prediction(model, files, filters=None):
+    if filters is None:
+        filter = []
     labs, preds = [], []
     for f in files:
         data_chunk = Dataset([f])
@@ -38,7 +40,7 @@ def streaming_prediction(model, files, output_folder, filters=[]):
         if not os.path.isfile(ftarget):
             np.save(ftarget, y_chunk)
         fpred = args.pred_folder + fname + "_pred.npy"
-        if not os.path.isfile():
+        if not os.path.isfile(fpred):
             np.save(fpred, y_pred)
 
 if __name__ == '__main__':
