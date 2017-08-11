@@ -9,6 +9,54 @@ from keras.utils import plot_model
 IMAGE_SIZE = 15
 
 
+def mini_doublet_swap_channel(args, n_channels):
+    IMAGE_SIZE = 7
+    hit_shapes = Input(shape=(IMAGE_SIZE, IMAGE_SIZE, n_channels), name='hit_shape_input')
+    infos = Input(shape=(len(dataset.featurelabs),), name='info_input')
+
+    conv = Conv2D(32, (5, 5), activation='relu', padding='same', data_format="channels_first", name='conv1')(hit_shapes)
+    pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_last", name='pool1')(conv)
+
+    conv = Conv2D(64, (3, 3), activation='relu', padding='same', data_format="channels_first", name='conv3')(pool)
+    pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_first", name='pool2')(conv)
+
+    flat = Flatten()(pool)
+    concat = concatenate([flat, infos])
+
+    b_norm = BatchNormalization()(concat)
+    dense = Dense(64, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense2')(b_norm)
+    drop = Dropout(args.dropout)(dense)
+    pred = Dense(2, activation='softmax', kernel_constraint=max_norm(args.maxnorm), name='output')(drop)
+
+    model = Model(inputs=[hit_shapes, infos], outputs=pred)
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
+
+
+def mini_doublet_model(args, n_channels):
+    IMAGE_SIZE = 7
+    hit_shapes = Input(shape=(IMAGE_SIZE, IMAGE_SIZE, n_channels), name='hit_shape_input')
+    infos = Input(shape=(len(dataset.featurelabs),), name='info_input')
+
+    conv = Conv2D(32, (5, 5), activation='relu', padding='same', data_format="channels_last", name='conv1')(hit_shapes)
+    pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_last", name='pool1')(conv)
+
+    conv = Conv2D(64, (3, 3), activation='relu', padding='same', data_format="channels_last", name='conv3')(pool)
+    pool = MaxPooling2D(pool_size=(2, 2), padding='same', data_format="channels_last", name='pool2')(conv)
+
+    flat = Flatten()(pool)
+    concat = concatenate([flat, infos])
+
+    b_norm = BatchNormalization()(concat)
+    dense = Dense(64, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense2')(b_norm)
+    drop = Dropout(args.dropout)(dense)
+    pred = Dense(2, activation='softmax', kernel_constraint=max_norm(args.maxnorm), name='output')(drop)
+
+    model = Model(inputs=[hit_shapes, infos], outputs=pred)
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
+
+
 def adam_small_doublet_model(args, n_channels):
     hit_shapes = Input(shape=(IMAGE_SIZE, IMAGE_SIZE, n_channels), name='hit_shape_input')
     infos = Input(shape=(len(dataset.featurelabs),), name='info_input')
@@ -68,7 +116,7 @@ def dense_model(args, n_channels):
     b_norm = BatchNormalization()(concat)
     dense = Dense(256, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense1')(b_norm)
     drop = Dropout(args.dropout)(dense)
-    dense = Dense(128, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense2')(b_norm)
+    dense = Dense(128, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense2')(drop)
     drop = Dropout(args.dropout)(dense)
     dense = Dense(64, activation='relu', kernel_constraint=max_norm(args.maxnorm), name='dense3')(drop)
     drop = Dropout(args.dropout)(dense)
@@ -192,7 +240,7 @@ if __name__ == '__main__':
     parser.add_argument('--name', type=str, default='model_')
     parser.add_argument('--maxnorm', type=float, default=10.)
     parser.add_argument('--verbose', type=int, default=1)
-    args = parser.parse_args()
+    main_args = parser.parse_args()
 
-    plot_model(big_doublet_model(args, 8), to_file='big_model.png', show_shapes=True, show_layer_names=True)
-    plot_model(separate_conv_doublet_model(args, 4), to_file='separate_conv_model.png', show_shapes=True, show_layer_names=True)
+    plot_model(big_doublet_model(main_args, 8), to_file='big_model.png', show_shapes=True, show_layer_names=True)
+    plot_model(separate_conv_doublet_model(main_args, 4), to_file='separate_conv_model.png', show_shapes=True, show_layer_names=True)
