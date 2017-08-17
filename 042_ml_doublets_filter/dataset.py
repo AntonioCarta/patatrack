@@ -6,7 +6,28 @@ if socket.gethostname() == 'cmg-gpu1080':
 
 import numpy as np
 import pandas as pd
-from keras.utils.np_utils import to_categorical
+
+
+def to_categorical(y, num_classes=None):
+    """Converts a class vector (integers) to binary class matrix.
+
+    E.g. for use with categorical_crossentropy.
+
+    # Arguments
+        y: class vector to be converted into a matrix
+            (integers from 0 to num_classes).
+        num_classes: total number of classes.
+
+    # Returns
+        A binary matrix representation of the input.
+    """
+    y = np.array(y, dtype='int').ravel()
+    if not num_classes:
+        num_classes = np.max(y) + 1
+    n = y.shape[0]
+    categorical = np.zeros((n, num_classes))
+    categorical[np.arange(n), y] = 1
+    return categorical
 
 
 target_lab = "pdgId"
@@ -189,7 +210,7 @@ class Dataset:
             X_hit = X_hit[:, 4:11, 4:11, :]
         X_info = self.get_info_features()
         y = to_categorical(self.get_labels(), num_classes=2)
-        return X_hit, X_info, y
+        return X_hit.astype(np.float32), X_info.astype(np.float32), y.astype(np.float32)
 
     def save(self, fname):
         # np.save(fname, self.data.as_matrix())
