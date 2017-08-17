@@ -64,16 +64,13 @@ train_data = Dataset(train_files)
 val_data = Dataset(val_files)
 test_data = Dataset(test_files)
 
-train_data = train_data.filter('isFlippedIn', 1.0).filter('isFlippedOut', 1.0) \
-    .filter('isBarrelIn', 1.0).filter('isBarrelOut', 1.0).balance_data()
-val_data = val_data.filter('isFlippedIn', 1.0).filter('isFlippedOut', 1.0) \
-    .filter('isBarrelIn', 1.0).filter('isBarrelOut', 1.0).balance_data()
-test_data = test_data.filter('isFlippedIn', 1.0).filter('isFlippedOut', 1.0) \
-    .filter('isBarrelIn', 1.0).filter('isBarrelOut', 1.0)
+train_data = train_data.balance_data()
+val_data = val_data.balance_data()
+test_data = test_data
 
-X_hit, X_info, y = train_data.get_data()
-X_val_hit, X_val_info, y_val = val_data.get_data()
-X_test_hit, X_test_info, y_test = test_data.get_data()
+X_hit, X_info, y = train_data.get_data(crop=True)
+X_val_hit, X_val_info, y_val = val_data.get_data(crop=True)
+X_test_hit, X_test_info, y_test = test_data.get_data(crop=True)
 
 print("Training size: " + str(X_hit.shape[0]))
 print("Val size: " + str(X_val_hit.shape[0]))
@@ -83,7 +80,7 @@ train_input_list = [X_hit, X_info]  # [X_hit[:,:,:,:4], X_hit[:,:,:,4:], X_info]
 val_input_list = [X_val_hit, X_val_info]  # [X_val_hit[:,:,:,:4], X_val_hit[:,:,:,4:], X_val_info]
 test_input_list = [X_test_hit, X_test_info]  # [X_test_hit[:,:,:,:4], X_test_hit[:,:,:,4:], X_test_info]
 
-model = adam_small_doublet_model(args, train_input_list[0].shape[-1])
+model = mini_doublet_swap_channel(args, train_input_list[0].shape[-1])
 
 if args.verbose:
     model.summary()
